@@ -186,7 +186,7 @@
         /* --- Correction pour Mobile --- */
         @media (max-width: 768px) {
             .bank {
-                width: 30%;
+                width: 40%; /* Agrandit les rives sur mobile */
                 flex-direction: column;
                 flex-wrap: nowrap;
                 align-items: center;
@@ -302,7 +302,7 @@
 
             function updateScene() {
                 // Le bateau ne touche pas les rives
-                boatElement.style.left = state.boat === 'left' ? '45%' : '55%';
+                boatElement.style.left = state.boat === 'left' ? '42%' : '58%';
                 moveCounter.textContent = `Traversées : ${state.moves} / ${MOVE_LIMIT}`;
                 
                 document.querySelectorAll('.character').forEach(char => {
