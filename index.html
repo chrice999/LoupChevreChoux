@@ -124,9 +124,9 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            align-content: flex-end; /* MODIFIÉ : Aligne les personnages en bas */
+            align-content: flex-end;
             gap: 0.5rem;
-            padding: 1rem; /* MODIFIÉ : Padding ajusté */
+            padding: 1rem;
             box-sizing: border-box;
             z-index: 5;
         }
@@ -134,7 +134,7 @@
         #bank-right { right: 0; border-top-left-radius: 50% 100%; }
 
         .character {
-            width: clamp(50px, 7vw, 75px); /* Taille des animaux réduite */
+            width: clamp(50px, 7vw, 75px);
             height: auto;
             cursor: pointer;
             transition: transform 0.3s ease, filter 0.3s ease;
@@ -157,9 +157,9 @@
         /* --- Bateau Amélioré --- */
         #boat {
             position: absolute;
-            width: clamp(180px, 22vw, 240px); /* Rétréci */
-            height: 100px; /* Rétréci */
-            bottom: 18%; /* Abaissé */
+            width: clamp(180px, 22vw, 240px);
+            height: 100px;
+            bottom: 18%;
             transform: translateX(-50%);
             transition: left 2.5s cubic-bezier(0.45, 0, 0.55, 1);
             z-index: 10;
@@ -186,11 +186,16 @@
         /* --- Correction pour Mobile --- */
         @media (max-width: 768px) {
             .bank {
-                width: 40%;
-                flex-wrap: wrap; /* Rétabli pour un affichage en grille */
-                gap: 0.5rem; /* Rétabli un petit espace */
-                justify-content: center; /* Centré pour un meilleur look */
-                padding: 1rem 0.5rem; /* Padding ajusté */
+                width: 30%; /* Un peu plus étroit pour l'espace */
+                flex-direction: column; /* Aligne verticalement */
+                flex-wrap: nowrap;
+                align-items: center; /* Centre horizontalement */
+                justify-content: flex-end; /* Aligne en bas */
+                gap: 0.2rem;
+                padding: 1rem 0.2rem;
+            }
+            .character {
+                width: 60%; /* Taille relative à la rive */
             }
         }
     </style>
