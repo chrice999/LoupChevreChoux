@@ -117,16 +117,16 @@
             position: absolute;
             bottom: 0;
             width: 35%;
-            height: 45%; /* Réduit pour laisser plus d'eau visible */
+            height: 45%;
             background-color: var(--bank-green);
             background-image: url('https://www.transparenttextures.com/patterns/grass.png');
             border-top: 5px solid #5a8c2a;
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            align-content: flex-start;
+            align-content: flex-end; /* MODIFIÉ : Aligne les personnages en bas */
             gap: 0.5rem;
-            padding: 2rem 1rem;
+            padding: 1rem; /* MODIFIÉ : Padding ajusté */
             box-sizing: border-box;
             z-index: 5;
         }
@@ -190,9 +190,8 @@
                 flex-wrap: wrap; /* Rétabli pour un affichage en grille */
                 gap: 0.5rem; /* Rétabli un petit espace */
                 justify-content: center; /* Centré pour un meilleur look */
-                padding: 2rem 0.5rem;
+                padding: 1rem 0.5rem; /* Padding ajusté */
             }
-            /* La règle spécifique pour .character sur mobile est supprimée pour utiliser la règle générale */
         }
     </style>
 </head>
