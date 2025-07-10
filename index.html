@@ -157,19 +157,19 @@
         /* --- Bateau Amélioré --- */
         #boat {
             position: absolute;
-            width: clamp(180px, 22vw, 240px);
-            height: 100px;
-            bottom: 18%;
+            width: clamp(150px, 18vw, 200px); /* Rétréci */
+            height: 80px; /* Rétréci */
+            bottom: 20%; /* Abaissé */
             transform: translateX(-50%);
             transition: left 2.5s cubic-bezier(0.45, 0, 0.55, 1);
             z-index: 10;
         }
-        .boat-hull { width: 100%; height: 60px; background: linear-gradient(to top, #6b4a29, #8B4513); border: 4px solid #5a3a1a; border-bottom-left-radius: 80px; border-bottom-right-radius: 80px; border-top-left-radius: 10px; border-top-right-radius: 10px; position: absolute; bottom: 0; box-sizing: border-box; box-shadow: inset 0 5px 15px rgba(0,0,0,0.3); }
-        .boat-deck { width: 90%; height: 8px; background: #a0522d; position: absolute; bottom: 56px; left: 5%; border-radius: 5px; border: 2px solid #5a3a1a; }
-        .boat-rail { position: absolute; width: 100%; height: 18px; background: #8B4513; bottom: 64px; border: 3px solid #5a3a1a; border-bottom: none; border-radius: 5px 5px 0 0; }
-        #farmer { position: absolute; height: 70px; width: auto; bottom: 64px; left: 15px; z-index: 11; }
+        .boat-hull { width: 100%; height: 50px; background: linear-gradient(to top, #6b4a29, #8B4513); border: 4px solid #5a3a1a; border-bottom-left-radius: 80px; border-bottom-right-radius: 80px; border-top-left-radius: 10px; border-top-right-radius: 10px; position: absolute; bottom: 0; box-sizing: border-box; box-shadow: inset 0 5px 15px rgba(0,0,0,0.3); }
+        .boat-deck { width: 90%; height: 6px; background: #a0522d; position: absolute; bottom: 46px; left: 5%; border-radius: 5px; border: 2px solid #5a3a1a; }
+        .boat-rail { position: absolute; width: 100%; height: 16px; background: #8B4513; bottom: 52px; border: 3px solid #5a3a1a; border-bottom: none; border-radius: 5px 5px 0 0; }
+        #farmer { position: absolute; height: 60px; width: auto; bottom: 52px; left: 15px; z-index: 11; }
         #boat-content { position: absolute; width: 50%; height: 100%; right: 10px; bottom: 0; display: flex; justify-content: center; align-items: center; z-index: 12; }
-        #boat-content > .character { transform: scale(0.85); }
+        #boat-content > .character { transform: scale(0.8); }
 
         .controls { text-align: center; margin-top: 1.5rem; }
         .button { font-family: var(--font-family); font-size: 1.2rem; padding: 0.75rem 1.5rem; border: none; background-color: var(--button-color); color: white; border-radius: 0.5rem; cursor: pointer; transition: background-color 0.3s, transform 0.2s; margin: 0.5rem; }
@@ -186,16 +186,16 @@
         /* --- Correction pour Mobile --- */
         @media (max-width: 768px) {
             .bank {
-                width: 30%; /* Un peu plus étroit pour l'espace */
-                flex-direction: column; /* Aligne verticalement */
+                width: 30%;
+                flex-direction: column;
                 flex-wrap: nowrap;
-                align-items: center; /* Centre horizontalement */
-                justify-content: flex-end; /* Aligne en bas */
+                align-items: center;
+                justify-content: flex-end;
                 gap: 0.2rem;
                 padding: 1rem 0.2rem;
             }
             .character {
-                width: 60%; /* Taille relative à la rive */
+                width: 60%;
             }
         }
     </style>
@@ -302,7 +302,7 @@
 
             function updateScene() {
                 // Le bateau ne touche pas les rives
-                boatElement.style.left = state.boat === 'left' ? '38%' : '62%';
+                boatElement.style.left = state.boat === 'left' ? '45%' : '55%';
                 moveCounter.textContent = `Traversées : ${state.moves} / ${MOVE_LIMIT}`;
                 
                 document.querySelectorAll('.character').forEach(char => {
