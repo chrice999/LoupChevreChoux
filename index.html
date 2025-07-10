@@ -133,8 +133,14 @@
         #bank-left { left: 0; border-top-right-radius: 50% 100%; }
         #bank-right { right: 0; border-top-left-radius: 50% 100%; }
 
-        .character {
+        .character-container {
+            position: relative;
             width: clamp(50px, 7vw, 75px);
+            height: clamp(50px, 7vw, 75px);
+        }
+
+        .character {
+            width: 100%;
             height: auto;
             cursor: pointer;
             transition: transform 0.3s ease, filter 0.3s ease;
@@ -143,6 +149,22 @@
         }
         .character:hover { transform: scale(1.1); filter: drop-shadow(0 6px 8px rgba(0,0,0,0.4)); }
         .character.disabled { cursor: not-allowed; filter: grayscale(80%) drop-shadow(0 4px 6px rgba(0,0,0,0.2)); }
+
+        .stars {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5rem;
+            animation: spin-stars 1s linear infinite;
+            pointer-events: none;
+            display: none; /* Hidden by default */
+        }
+
+        .knocked-out .stars {
+            display: block;
+        }
+
 
         .tree, .bush { position: absolute; z-index: 4; }
         .tree { bottom: 45%; width: 20px; height: 80px; background: #6b4a29; border-radius: 5px; }
@@ -157,9 +179,9 @@
         /* --- Bateau Amélioré --- */
         #boat {
             position: absolute;
-            width: clamp(150px, 18vw, 200px); /* Rétréci */
-            height: 80px; /* Rétréci */
-            bottom: 20%; /* Abaissé */
+            width: clamp(150px, 18vw, 200px);
+            height: 80px;
+            bottom: 20%;
             transform: translateX(-50%);
             transition: left 2.5s cubic-bezier(0.45, 0, 0.55, 1);
             z-index: 10;
@@ -167,9 +189,9 @@
         .boat-hull { width: 100%; height: 50px; background: linear-gradient(to top, #6b4a29, #8B4513); border: 4px solid #5a3a1a; border-bottom-left-radius: 80px; border-bottom-right-radius: 80px; border-top-left-radius: 10px; border-top-right-radius: 10px; position: absolute; bottom: 0; box-sizing: border-box; box-shadow: inset 0 5px 15px rgba(0,0,0,0.3); }
         .boat-deck { width: 90%; height: 6px; background: #a0522d; position: absolute; bottom: 46px; left: 5%; border-radius: 5px; border: 2px solid #5a3a1a; }
         .boat-rail { position: absolute; width: 100%; height: 16px; background: #8B4513; bottom: 52px; border: 3px solid #5a3a1a; border-bottom: none; border-radius: 5px 5px 0 0; }
-        #farmer { position: absolute; height: 60px; width: auto; bottom: 52px; left: 15px; z-index: 11; }
+        #farmer { position: absolute; height: 60px; width: auto; bottom: 52px; left: 15px; z-index: 11; cursor: pointer; }
         #boat-content { position: absolute; width: 50%; height: 100%; right: 10px; bottom: 0; display: flex; justify-content: center; align-items: center; z-index: 12; }
-        #boat-content > .character { transform: scale(0.8); }
+        #boat-content .character-container { transform: scale(0.8); }
 
         .controls { text-align: center; margin-top: 1.5rem; }
         .button { font-family: var(--font-family); font-size: 1.2rem; padding: 0.75rem 1.5rem; border: none; background-color: var(--button-color); color: white; border-radius: 0.5rem; cursor: pointer; transition: background-color 0.3s, transform 0.2s; margin: 0.5rem; }
@@ -182,11 +204,12 @@
 
         @keyframes shake { from, to { transform: translate(0, 0) rotate(0); } 20% { transform: translate(-5px, 5px) rotate(-5deg); } 40% { transform: translate(5px, -5px) rotate(5deg); } 60% { transform: translate(-5px, 5px) rotate(-5deg); } 80% { transform: translate(5px, -5px) rotate(5deg); } }
         .eaten { animation: shake 0.7s ease-in-out; }
+        @keyframes spin-stars { from { transform: translateX(-50%) rotate(0deg); } to { transform: translateX(-50%) rotate(360deg); } }
 
         /* --- Correction pour Mobile --- */
         @media (max-width: 768px) {
             .bank {
-                width: 40%; /* Agrandit les rives sur mobile */
+                width: 30%;
                 flex-direction: column;
                 flex-wrap: nowrap;
                 align-items: center;
@@ -194,7 +217,7 @@
                 gap: 0.2rem;
                 padding: 1rem 0.2rem;
             }
-            .character {
+            .character-container {
                 width: 60%;
             }
         }
@@ -254,8 +277,10 @@
             const messageBox = document.getElementById('message-box');
             const gameDescription = document.getElementById('game-description');
             const moveCounter = document.getElementById('move-counter');
+            const farmerElement = document.getElementById('farmer');
 
-            const MOVE_LIMIT = 7; // Limite de traversées
+            const MOVE_LIMIT = 7;
+            const CHEAT_CLICKS = 10;
             let state = {};
 
             const characterData = {
@@ -271,19 +296,26 @@
                     boat: 'left',
                     moves: 0,
                     isMoving: false,
-                    isGameOver: false
+                    isGameOver: false,
+                    knockedOut: { wolf: false, goat: false, cabbage: false },
+                    clickCounters: { wolf: 0, goat: 0, cabbage: 0, farmer: 0 }
                 };
                 
                 messageBox.innerHTML = '';
                 messageBox.className = '';
                 crossButton.disabled = false;
 
-                bankLeft.querySelectorAll('.character').forEach(c => c.remove());
-                bankRight.querySelectorAll('.character').forEach(c => c.remove());
+                bankLeft.querySelectorAll('.character-container').forEach(c => c.remove());
+                bankRight.querySelectorAll('.character-container').forEach(c => c.remove());
                 boatContent.innerHTML = '';
 
                 Object.keys(characterData).forEach(id => {
                     const charInfo = characterData[id];
+
+                    const container = document.createElement('div');
+                    container.className = 'character-container';
+                    container.id = `container-${id}`;
+
                     const charElement = document.createElement('img');
                     charElement.id = id;
                     charElement.src = charInfo.src;
@@ -294,30 +326,37 @@
                         this.onerror=null;
                         this.src=`https://placehold.co/90x90/555/fff?text=${encodeURIComponent(charInfo.name)}`;
                     };
-                    bankLeft.appendChild(charElement);
+
+                    const starsElement = document.createElement('div');
+                    starsElement.className = 'stars';
+                    starsElement.textContent = '✨';
+
+                    container.appendChild(charElement);
+                    container.appendChild(starsElement);
+                    bankLeft.appendChild(container);
                 });
 
                 updateScene();
             }
 
             function updateScene() {
-                // Le bateau ne touche pas les rives
                 boatElement.style.left = state.boat === 'left' ? '42%' : '58%';
                 moveCounter.textContent = `Traversées : ${state.moves} / ${MOVE_LIMIT}`;
                 
-                document.querySelectorAll('.character').forEach(char => {
-                    const id = char.id;
+                document.querySelectorAll('.character-container').forEach(container => {
+                    const id = container.id.split('-')[1];
                     const location = state.characters[id];
                     
                     if (location === 'boat') {
-                        if (char.parentElement !== boatContent) boatContent.appendChild(char);
+                        if (container.parentElement !== boatContent) boatContent.appendChild(container);
                     } else if (location === 'left') {
-                        if (char.parentElement !== bankLeft) bankLeft.appendChild(char);
+                        if (container.parentElement !== bankLeft) bankLeft.appendChild(container);
                     } else {
-                        if (char.parentElement !== bankRight) bankRight.appendChild(char);
+                        if (container.parentElement !== bankRight) bankRight.appendChild(container);
                     }
 
-                    char.classList.toggle('disabled', location !== state.boat && location !== 'boat');
+                    container.querySelector('.character').classList.toggle('disabled', location !== state.boat && location !== 'boat');
+                    container.classList.toggle('knocked-out', state.knockedOut[id]);
                 });
             }
 
@@ -325,6 +364,21 @@
                 if (state.isMoving || state.isGameOver) return;
                 const charId = event.target.id;
                 const currentLocation = state.characters[charId];
+
+                // Cheat code pour assommer
+                if (currentLocation === 'boat') {
+                    state.clickCounters[charId]++;
+                    if (state.clickCounters[charId] >= CHEAT_CLICKS) {
+                        state.knockedOut[charId] = true;
+                        state.clickCounters[charId] = 0; // Reset counter
+                        updateScene();
+                        return; // Stop further action
+                    }
+                } else {
+                    state.clickCounters[charId] = 0; // Reset if not in boat
+                }
+                
+                // Logique de déplacement normale
                 if (currentLocation === state.boat) {
                     if (boatContent.children.length === 0) {
                         state.characters[charId] = 'boat';
@@ -335,6 +389,19 @@
                 updateScene();
             }
 
+            function onFarmerClick() {
+                if (state.isGameOver) return;
+                state.clickCounters.farmer++;
+                if (state.clickCounters.farmer >= CHEAT_CLICKS) {
+                    state.characters.wolf = 'right';
+                    state.characters.goat = 'right';
+                    state.characters.cabbage = 'right';
+                    state.boat = 'right';
+                    updateScene();
+                    endGame(true, [], "Le paysan, d'un coup de génie (ou de triche), a tout transporté d'un seul coup !");
+                }
+            }
+
             function crossRiver() {
                 if (state.isMoving || state.isGameOver) return;
                 state.isMoving = true;
@@ -343,21 +410,17 @@
                 state.moves++;
                 state.boat = (state.boat === 'left') ? 'right' : 'left';
                 
-                // Met à jour la position du bateau et le compteur visuellement
                 updateScene();
 
                 setTimeout(() => {
-                    // Le passager descend automatiquement
-                    const passenger = boatContent.children[0];
-                    if (passenger) {
-                        state.characters[passenger.id] = state.boat;
+                    const passengerContainer = boatContent.children[0];
+                    if (passengerContainer) {
+                        const passengerId = passengerContainer.id.split('-')[1];
+                        state.characters[passengerId] = state.boat;
                     }
 
                     state.isMoving = false;
-                    
                     checkGameStatus();
-                    
-                    // Met à jour la scène finale après la vérification
                     updateScene(); 
                     
                     if (!state.isGameOver) {
@@ -367,7 +430,6 @@
             }
 
             function checkGameStatus() {
-                // Si le jeu est déjà terminé, on ne vérifie plus rien
                 if (state.isGameOver) return;
 
                 const getItemsOnBank = (bank) => Object.keys(state.characters).filter(id => state.characters[id] === bank);
@@ -378,9 +440,9 @@
                 let lossReason = "";
 
                 const checkBank = (items) => {
-                    const hasWolf = items.includes('wolf');
-                    const hasGoat = items.includes('goat');
-                    const hasCabbage = items.includes('cabbage');
+                    const hasWolf = items.includes('wolf') && !state.knockedOut.wolf;
+                    const hasGoat = items.includes('goat') && !state.knockedOut.goat;
+                    const hasCabbage = items.includes('cabbage') && !state.knockedOut.cabbage;
                     if (hasWolf && hasGoat) {
                         eatenPair = ['wolf', 'goat'];
                         lossReason = "Laissés sans surveillance, la nature a repris ses droits... Le loup a dévoré la chèvre.";
@@ -413,18 +475,19 @@
                 state.isGameOver = true;
                 crossButton.disabled = true;
                 if (isWin) {
-                    messageBox.innerHTML = "<strong>Bravo, vous avez réussi !</strong><br>Grâce à votre logique, tous ont traversé la rivière sains et saufs.";
+                    messageBox.innerHTML = `<strong>Bravo, vous avez réussi !</strong><br>${reason || "Grâce à votre logique, tous ont traversé la rivière sains et saufs."}`;
                     messageBox.className = 'win-message';
                 } else {
                     messageBox.innerHTML = `<strong>Oh non, c'est perdu !</strong><br>${reason}`;
                     messageBox.className = 'loss-message';
                     eatenPair.forEach(id => {
-                        document.getElementById(id)?.classList.add('eaten');
+                        document.getElementById(id)?.parentElement.classList.add('eaten');
                     });
                 }
             }
             crossButton.addEventListener('click', crossRiver);
             resetButton.addEventListener('click', initializeGame);
+            farmerElement.addEventListener('click', onFarmerClick);
             initializeGame();
         });
     </script>
