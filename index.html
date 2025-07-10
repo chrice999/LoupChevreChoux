@@ -197,6 +197,10 @@
         .button { font-family: var(--font-family); font-size: 1.2rem; padding: 0.75rem 1.5rem; border: none; background-color: var(--button-color); color: white; border-radius: 0.5rem; cursor: pointer; transition: background-color 0.3s, transform 0.2s; margin: 0.5rem; }
         .button:hover { background-color: var(--button-hover); transform: translateY(-2px); }
         .button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: none; }
+        #unlimited-button.active {
+            background-color: #2f855a; /* Vert pour indiquer le mode actif */
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+        }
         #message-box { margin-top: 1rem; height: 5rem; font-size: 1.2rem; font-weight: bold; text-align: center; transition: color 0.5s; padding: 0 1rem; }
         .win-message { color: #2f855a; }
         .loss-message { color: #c53030; }
@@ -219,6 +223,11 @@
             }
             .character-container {
                 width: 60%;
+            }
+            .controls {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
             }
         }
     </style>
@@ -258,9 +267,10 @@
 
         <div class="controls">
             <button id="cross-button" class="button">Traverser</button>
+            <button id="unlimited-button" class="button" style="background-color: #6b7280;">Illimité</button>
             <button id="reset-button" class="button" style="background-color: #c53030;">Recommencer</button>
-            <div id="move-counter"></div>
-            <div id="message-box"></div>
+            <div id="move-counter" style="width: 100%;"></div>
+            <div id="message-box" style="width: 100%;"></div>
         </div>
         
         <footer style="text-align:center; margin-top: 2rem; color: #718096;">Créé par Chrice</footer>
@@ -274,6 +284,7 @@
             const boatElement = document.getElementById('boat');
             const crossButton = document.getElementById('cross-button');
             const resetButton = document.getElementById('reset-button');
+            const unlimitedButton = document.getElementById('unlimited-button');
             const messageBox = document.getElementById('message-box');
             const gameDescription = document.getElementById('game-description');
             const moveCounter = document.getElementById('move-counter');
@@ -297,6 +308,7 @@
                     moves: 0,
                     isMoving: false,
                     isGameOver: false,
+                    isUnlimitedMode: false,
                     knockedOut: { wolf: false, goat: false, cabbage: false },
                     clickCounters: { wolf: 0, goat: 0, cabbage: 0, farmer: 0 }
                 };
@@ -304,6 +316,7 @@
                 messageBox.innerHTML = '';
                 messageBox.className = '';
                 crossButton.disabled = false;
+                unlimitedButton.classList.remove('active');
 
                 bankLeft.querySelectorAll('.character-container').forEach(c => c.remove());
                 bankRight.querySelectorAll('.character-container').forEach(c => c.remove());
@@ -341,7 +354,8 @@
 
             function updateScene() {
                 boatElement.style.left = state.boat === 'left' ? '42%' : '58%';
-                moveCounter.textContent = `Traversées : ${state.moves} / ${MOVE_LIMIT}`;
+                const limitText = state.isUnlimitedMode ? '∞' : MOVE_LIMIT;
+                moveCounter.textContent = `Traversées : ${state.moves} / ${limitText}`;
                 
                 document.querySelectorAll('.character-container').forEach(container => {
                     const id = container.id.split('-')[1];
@@ -365,20 +379,18 @@
                 const charId = event.target.id;
                 const currentLocation = state.characters[charId];
 
-                // Cheat code pour assommer
                 if (currentLocation === 'boat') {
                     state.clickCounters[charId]++;
                     if (state.clickCounters[charId] >= CHEAT_CLICKS) {
-                        state.knockedOut[charId] = true;
-                        state.clickCounters[charId] = 0; // Reset counter
+                        state.knockedOut[charId] = !state.knockedOut[charId]; // Toggle knock out
+                        state.clickCounters[charId] = 0;
                         updateScene();
-                        return; // Stop further action
+                        return;
                     }
                 } else {
-                    state.clickCounters[charId] = 0; // Reset if not in boat
+                    state.clickCounters[charId] = 0;
                 }
                 
-                // Logique de déplacement normale
                 if (currentLocation === state.boat) {
                     if (boatContent.children.length === 0) {
                         state.characters[charId] = 'boat';
@@ -400,6 +412,13 @@
                     updateScene();
                     endGame(true, [], "Le paysan, d'un coup de génie (ou de triche), a tout transporté d'un seul coup !");
                 }
+            }
+
+            function toggleUnlimitedMode() {
+                if (state.isGameOver) return;
+                state.isUnlimitedMode = !state.isUnlimitedMode;
+                unlimitedButton.classList.toggle('active', state.isUnlimitedMode);
+                updateScene();
             }
 
             function crossRiver() {
@@ -466,7 +485,7 @@
                     endGame(true);
                 } else if (lossCondition) {
                     endGame(false, eatenPair, lossReason);
-                } else if (state.moves >= MOVE_LIMIT && itemsOnRight.length !== 3) {
+                } else if (!state.isUnlimitedMode && state.moves >= MOVE_LIMIT && itemsOnRight.length !== 3) {
                     endGame(false, [], "Le temps presse et la nuit tombe... Vous n'avez pas réussi à résoudre l'énigme en 7 traversées.");
                 }
             }
@@ -481,12 +500,13 @@
                     messageBox.innerHTML = `<strong>Oh non, c'est perdu !</strong><br>${reason}`;
                     messageBox.className = 'loss-message';
                     eatenPair.forEach(id => {
-                        document.getElementById(id)?.parentElement.classList.add('eaten');
+                        document.getElementById(`container-${id}`)?.classList.add('eaten');
                     });
                 }
             }
             crossButton.addEventListener('click', crossRiver);
             resetButton.addEventListener('click', initializeGame);
+            unlimitedButton.addEventListener('click', toggleUnlimitedMode);
             farmerElement.addEventListener('click', onFarmerClick);
             initializeGame();
         });
