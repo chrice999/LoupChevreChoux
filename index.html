@@ -7,9 +7,10 @@
     <style>
         :root {
             --river-blue: #6b93d6;
-            --bank-green: #89c147;
-            --button-color: #4a5568;
-            --button-hover: #2d3748;
+            --sky-blue: #a2c2f0;
+            --bank-green: #78ab46;
+            --button-color: #5a3a1a;
+            --button-hover: #4a2e10;
             --font-family: 'Georgia', serif;
         }
 
@@ -21,7 +22,7 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            background-color: #f0f4f8;
+            background-color: #e0f0e8;
             color: #2d3748;
         }
 
@@ -36,183 +37,151 @@
         header {
             text-align: center;
             margin-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 1rem;
+            border-radius: 0.75rem;
         }
 
         h1 {
             font-size: clamp(2rem, 5vw, 3rem);
             margin: 0;
+            color: #4a2e10;
+        }
+        #game-description {
+            font-style: italic;
+            color: #5a3a1a;
+            max-width: 800px;
+            margin: 0.5rem auto 0;
         }
 
         .game-world {
             position: relative;
             width: 100%;
-            height: 50vh;
-            min-height: 400px;
-            background: linear-gradient(to top, var(--river-blue) 60%, #a2c2f0 100%);
+            height: 60vh;
+            min-height: 450px;
+            background: linear-gradient(to top, 
+                var(--river-blue) 0%, 
+                var(--river-blue) 55%, 
+                var(--sky-blue) 55.1%, 
+                var(--sky-blue) 100%
+            );
             overflow: hidden;
             border-radius: 1rem;
             box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
+        
+        /* --- Ambiance Visuelle --- */
+        .sun {
+            position: absolute;
+            top: 8%;
+            left: 10%;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #FFF7B2, #FFD700);
+            border-radius: 50%;
+            box-shadow: 0 0 25px 10px #FFD700, 0 0 50px 20px #FFA50033;
+        }
+        
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.9;
+            filter: drop-shadow(5px 5px 5px rgba(0,0,0,0.1));
+            animation: animate-clouds 120s linear infinite;
+        }
+        .cloud.c1 { top: 10%; width: 120px; height: 40px; animation-delay: -10s; }
+        .cloud.c2 { top: 20%; width: 180px; height: 60px; animation-delay: -45s; }
+        .cloud.c3 { top: 15%; width: 150px; height: 50px; animation-delay: -80s; }
+        .cloud::before, .cloud::after { content: ''; position: absolute; background: white; border-radius: 50%; }
+        .cloud.c1::before { width: 60px; height: 60px; top: -25px; left: 20px; }
+        .cloud.c1::after { width: 80px; height: 80px; top: -30px; right: 10px; }
+        .cloud.c2::before { width: 90px; height: 90px; top: -40px; left: 30px; }
+        .cloud.c2::after { width: 120px; height: 120px; top: -50px; right: 20px; }
+        .cloud.c3::before { width: 70px; height: 70px; top: -35px; left: 25px; }
+        .cloud.c3::after { width: 100px; height: 100px; top: -40px; right: 15px; }
+        @keyframes animate-clouds { from { transform: translateX(-200px); } to { transform: translateX(120vw); } }
+
+        .game-world::after {
+            content: '';
+            position: absolute;
+            top: 55%; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(175deg, rgba(255,255,255,0.2) 5%, transparent 10%, transparent 90%, rgba(255,255,255,0.2) 95%);
+            background-size: 100% 50px;
+            animation: animate-water 8s linear infinite;
+            pointer-events: none;
+        }
+        @keyframes animate-water { from { background-position: 0 0; } to { background-position: 0 -50px; } }
 
         .bank {
             position: absolute;
             bottom: 0;
-            width: 30%;
-            height: 65%;
+            width: 35%;
+            height: 45%; /* Réduit pour laisser plus d'eau visible */
             background-color: var(--bank-green);
             background-image: url('https://www.transparenttextures.com/patterns/grass.png');
             border-top: 5px solid #5a8c2a;
             display: flex;
+            flex-wrap: wrap;
             justify-content: center;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem;
+            align-content: flex-start;
+            gap: 0.5rem;
+            padding: 2rem 1rem;
             box-sizing: border-box;
+            z-index: 5;
         }
-
-        #bank-left {
-            left: 0;
-            border-top-right-radius: 50% 100%;
-        }
-
-        #bank-right {
-            right: 0;
-            border-top-left-radius: 50% 100%;
-        }
+        #bank-left { left: 0; border-top-right-radius: 50% 100%; }
+        #bank-right { right: 0; border-top-left-radius: 50% 100%; }
 
         .character {
-            width: clamp(60px, 10vw, 100px);
+            width: clamp(60px, 8vw, 90px);
             height: auto;
             cursor: pointer;
             transition: transform 0.3s ease, filter 0.3s ease;
             filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+            object-fit: contain;
         }
+        .character:hover { transform: scale(1.1); filter: drop-shadow(0 6px 8px rgba(0,0,0,0.4)); }
+        .character.disabled { cursor: not-allowed; filter: grayscale(80%) drop-shadow(0 4px 6px rgba(0,0,0,0.2)); }
 
-        .character:hover {
-            transform: scale(1.1);
-            filter: drop-shadow(0 6px 8px rgba(0,0,0,0.4));
-        }
+        .tree, .bush { position: absolute; z-index: 4; }
+        .tree { bottom: 45%; width: 20px; height: 80px; background: #6b4a29; border-radius: 5px; }
+        .tree::before { content: ''; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); width: 80px; height: 80px; background: #4a7c2a; border-radius: 50%; }
+        .tree.t1 { left: 10%; }
+        .tree.t2 { right: 15%; bottom: 50%; transform: scale(0.8); }
+        .bush { bottom: 55%; width: 60px; height: 30px; background: #5a8c2a; border-radius: 50%; }
+        .bush.b1 { left: 60%; }
+        .bush.b2 { right: 50%; transform: scale(1.2); }
 
-        .character.disabled {
-            cursor: not-allowed;
-            filter: grayscale(80%) drop-shadow(0 4px 6px rgba(0,0,0,0.2));
-        }
 
+        /* --- Bateau Amélioré --- */
         #boat {
             position: absolute;
-            width: clamp(180px, 20vw, 220px);
-            height: 100px;
-            bottom: 25%;
+            width: clamp(180px, 22vw, 240px); /* Rétréci */
+            height: 100px; /* Rétréci */
+            bottom: 18%; /* Abaissé */
             transform: translateX(-50%);
             transition: left 2.5s cubic-bezier(0.45, 0, 0.55, 1);
-            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5));
-        }
-        
-        /* --- Styles pour le bateau et le conducteur en CSS --- */
-        .boat-shape {
-            width: 100%;
-            height: 60px;
-            background-color: #8B4513; /* Marron pour la coque */
-            border: 4px solid #5a3a1a;
-            border-bottom-left-radius: 60px;
-            border-bottom-right-radius: 60px;
-            border-top-left-radius: 10px;
-            border-top-right-radius: 10px;
-            position: absolute;
-            bottom: 0;
-            box-sizing: border-box;
-        }
-
-        .farmer {
-            position: absolute;
-            width: 35px;
-            height: 70px;
-            bottom: 50px;
-            left: 25px;
             z-index: 10;
         }
+        .boat-hull { width: 100%; height: 60px; background: linear-gradient(to top, #6b4a29, #8B4513); border: 4px solid #5a3a1a; border-bottom-left-radius: 80px; border-bottom-right-radius: 80px; border-top-left-radius: 10px; border-top-right-radius: 10px; position: absolute; bottom: 0; box-sizing: border-box; box-shadow: inset 0 5px 15px rgba(0,0,0,0.3); }
+        .boat-deck { width: 90%; height: 8px; background: #a0522d; position: absolute; bottom: 56px; left: 5%; border-radius: 5px; border: 2px solid #5a3a1a; }
+        .boat-rail { position: absolute; width: 100%; height: 18px; background: #8B4513; bottom: 64px; border: 3px solid #5a3a1a; border-bottom: none; border-radius: 5px 5px 0 0; }
+        #farmer { position: absolute; height: 70px; width: auto; bottom: 64px; left: 15px; z-index: 11; }
+        #boat-content { position: absolute; width: 50%; height: 100%; right: 10px; bottom: 0; display: flex; justify-content: center; align-items: center; z-index: 12; }
+        #boat-content > .character { transform: scale(0.85); }
 
-        .farmer-body {
-            width: 100%;
-            height: 40px;
-            background-color: #4a90e2; /* Chemise bleue */
-            border-radius: 5px;
-            position: absolute;
-            bottom: 0;
-        }
+        .controls { text-align: center; margin-top: 1.5rem; }
+        .button { font-family: var(--font-family); font-size: 1.2rem; padding: 0.75rem 1.5rem; border: none; background-color: var(--button-color); color: white; border-radius: 0.5rem; cursor: pointer; transition: background-color 0.3s, transform 0.2s; margin: 0.5rem; }
+        .button:hover { background-color: var(--button-hover); transform: translateY(-2px); }
+        .button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: none; }
+        #message-box { margin-top: 1rem; height: 5rem; font-size: 1.2rem; font-weight: bold; text-align: center; transition: color 0.5s; padding: 0 1rem; }
+        .win-message { color: #2f855a; }
+        .loss-message { color: #c53030; }
+        #move-counter { font-size: 1.1rem; color: #4a5568; margin-top: 0.5rem; }
 
-        .farmer-head {
-            width: 28px;
-            height: 28px;
-            background-color: #ffdbac; /* Couleur peau */
-            border-radius: 50%;
-            position: absolute;
-            top: 0;
-            left: 3.5px;
-        }
-        
-        #boat-content {
-            position: absolute;
-            width: 50%;
-            height: 100%;
-            right: 10px;
-            bottom: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .controls {
-            text-align: center;
-            margin-top: 1.5rem;
-        }
-
-        .button {
-            font-family: var(--font-family);
-            font-size: 1.2rem;
-            padding: 0.75rem 1.5rem;
-            border: none;
-            background-color: var(--button-color);
-            color: white;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.2s;
-            margin: 0.5rem;
-        }
-
-        .button:hover {
-            background-color: var(--button-hover);
-            transform: translateY(-2px);
-        }
-
-        .button:disabled {
-            background-color: #a0aec0;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        #message-box {
-            margin-top: 1rem;
-            height: 2.5rem;
-            font-size: 1.5rem;
-            font-weight: bold;
-            text-align: center;
-            transition: color 0.5s;
-        }
-
-        .win-message { color: #38a169; }
-        .loss-message { color: #e53e3e; }
-
-        @keyframes shake {
-            0%, 100% { transform: translate(0, 0) rotate(0); }
-            20% { transform: translate(-5px, 5px) rotate(-5deg); }
-            40% { transform: translate(5px, -5px) rotate(5deg); }
-            60% { transform: translate(-5px, 5px) rotate(-5deg); }
-            80% { transform: translate(5px, -5px) rotate(5deg); }
-        }
-        .eaten {
-            animation: shake 0.7s ease-in-out;
-        }
+        @keyframes shake { from, to { transform: translate(0, 0) rotate(0); } 20% { transform: translate(-5px, 5px) rotate(-5deg); } 40% { transform: translate(5px, -5px) rotate(5deg); } 60% { transform: translate(-5px, 5px) rotate(-5deg); } 80% { transform: translate(5px, -5px) rotate(5deg); } }
+        .eaten { animation: shake 0.7s ease-in-out; }
     </style>
 </head>
 <body>
@@ -220,27 +189,38 @@
     <div class="game-container">
         <header>
             <h1>L'Énigme de la Rivière</h1>
-            <p>Cliquez sur un personnage pour le déplacer, puis traversez la rivière !</p>
+            <p id="game-description"></p>
         </header>
 
         <div class="game-world">
-            <div id="bank-left" class="bank"></div>
+            <div class="sun"></div>
+            <div class="cloud c1"></div>
+            <div class="cloud c2"></div>
+            <div class="cloud c3"></div>
+
+            <div id="bank-left" class="bank">
+                <div class="tree t1"></div>
+                <div class="bush b1"></div>
+            </div>
             
             <div id="boat">
-                <div class="boat-shape"></div>
-                <div class="farmer">
-                    <div class="farmer-head"></div>
-                    <div class="farmer-body"></div>
-                </div>
+                <div class="boat-hull"></div>
+                <div class="boat-deck"></div>
+                <div class="boat-rail"></div>
+                <img id="farmer" src="img/perso.png" alt="Paysan" onerror="this.style.display='none'">
                 <div id="boat-content"></div>
             </div>
 
-            <div id="bank-right" class="bank"></div>
+            <div id="bank-right" class="bank">
+                <div class="tree t2"></div>
+                <div class="bush b2"></div>
+            </div>
         </div>
 
         <div class="controls">
             <button id="cross-button" class="button">Traverser</button>
             <button id="reset-button" class="button" style="background-color: #c53030;">Recommencer</button>
+            <div id="move-counter"></div>
             <div id="message-box"></div>
         </div>
         
@@ -256,7 +236,10 @@
             const crossButton = document.getElementById('cross-button');
             const resetButton = document.getElementById('reset-button');
             const messageBox = document.getElementById('message-box');
+            const gameDescription = document.getElementById('game-description');
+            const moveCounter = document.getElementById('move-counter');
 
+            const MOVE_LIMIT = 10;
             let state = {};
 
             const characterData = {
@@ -266,19 +249,21 @@
             };
 
             function initializeGame() {
+                gameDescription.textContent = "Sur la rive, un paysan, un loup, une chèvre et un chou attendent. Aidez-les à traverser la rivière, mais attention : le loup ne peut rester avec la chèvre, ni la chèvre avec le chou, sans votre surveillance.";
                 state = {
                     characters: { wolf: 'left', goat: 'left', cabbage: 'left' },
                     boat: 'left',
+                    moves: 0,
                     isMoving: false,
                     isGameOver: false
                 };
                 
-                messageBox.textContent = '';
+                messageBox.innerHTML = '';
                 messageBox.className = '';
                 crossButton.disabled = false;
 
-                bankLeft.innerHTML = '';
-                bankRight.innerHTML = '';
+                bankLeft.querySelectorAll('.character').forEach(c => c.remove());
+                bankRight.querySelectorAll('.character').forEach(c => c.remove());
                 boatContent.innerHTML = '';
 
                 Object.keys(characterData).forEach(id => {
@@ -291,7 +276,7 @@
                     charElement.addEventListener('click', onCharacterClick);
                     charElement.onerror = function() {
                         this.onerror=null;
-                        this.src=`https://placehold.co/100x100/555/fff?text=${encodeURIComponent(charInfo.name)}`;
+                        this.src=`https://placehold.co/90x90/555/fff?text=${encodeURIComponent(charInfo.name)}`;
                     };
                     bankLeft.appendChild(charElement);
                 });
@@ -300,7 +285,9 @@
             }
 
             function updateScene() {
-                boatElement.style.left = state.boat === 'left' ? '30%' : '70%';
+                // Le bateau ne touche pas les rives
+                boatElement.style.left = state.boat === 'left' ? '38%' : '62%';
+                moveCounter.textContent = `Traversées : ${state.moves} / ${MOVE_LIMIT}`;
                 
                 document.querySelectorAll('.character').forEach(char => {
                     const id = char.id;
@@ -314,11 +301,7 @@
                         if (char.parentElement !== bankRight) bankRight.appendChild(char);
                     }
 
-                    if (location !== state.boat && location !== 'boat') {
-                        char.classList.add('disabled');
-                    } else {
-                        char.classList.remove('disabled');
-                    }
+                    char.classList.toggle('disabled', location !== state.boat && location !== 'boat');
                 });
             }
 
@@ -340,8 +323,12 @@
                 if (state.isMoving || state.isGameOver) return;
                 state.isMoving = true;
                 crossButton.disabled = true;
+                
+                state.moves++;
                 state.boat = (state.boat === 'left') ? 'right' : 'left';
-                boatElement.style.left = state.boat === 'left' ? '30%' : '70%';
+                
+                updateScene();
+
                 setTimeout(() => {
                     state.isMoving = false;
                     crossButton.disabled = state.isGameOver;
@@ -356,40 +343,48 @@
                 const itemsOnRight = getItemsOnBank('right');
                 let lossCondition = false;
                 let eatenPair = [];
+                let lossReason = "";
+
                 const checkBank = (items) => {
                     const hasWolf = items.includes('wolf');
                     const hasGoat = items.includes('goat');
                     const hasCabbage = items.includes('cabbage');
                     if (hasWolf && hasGoat) {
                         eatenPair = ['wolf', 'goat'];
+                        lossReason = "Laissés sans surveillance, la nature a repris ses droits... Le loup a dévoré la chèvre.";
                         return true;
                     }
                     if (hasGoat && hasCabbage) {
                         eatenPair = ['goat', 'cabbage'];
+                        lossReason = "Laissés sans surveillance, la gourmandise l'a emporté... La chèvre a dévoré le chou.";
                         return true;
                     }
                     return false;
                 };
+
                 if (state.boat === 'right' && checkBank(itemsOnLeft)) {
                     lossCondition = true;
                 } else if (state.boat === 'left' && checkBank(itemsOnRight)) {
                     lossCondition = true;
                 }
+
                 if (lossCondition) {
-                    endGame(false, eatenPair);
+                    endGame(false, eatenPair, lossReason);
                 } else if (itemsOnRight.length === 3) {
                     endGame(true);
+                } else if (state.moves >= MOVE_LIMIT) {
+                    endGame(false, [], "Le temps presse et la nuit tombe... Vous n'avez pas réussi à résoudre l'énigme à temps.");
                 }
             }
 
-            function endGame(isWin, eatenPair = []) {
+            function endGame(isWin, eatenPair = [], reason = "") {
                 state.isGameOver = true;
                 crossButton.disabled = true;
                 if (isWin) {
-                    messageBox.textContent = "Bravo, vous avez réussi !";
+                    messageBox.innerHTML = "<strong>Bravo, vous avez réussi !</strong><br>Grâce à votre logique, tous ont traversé la rivière sains et saufs.";
                     messageBox.className = 'win-message';
                 } else {
-                    messageBox.textContent = "Oh non, c'est perdu !";
+                    messageBox.innerHTML = `<strong>Oh non, c'est perdu !</strong><br>${reason}`;
                     messageBox.className = 'loss-message';
                     eatenPair.forEach(id => {
                         document.getElementById(id)?.classList.add('eaten');
