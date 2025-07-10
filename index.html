@@ -1,1 +1,405 @@
-.
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu : Le Loup, la Chèvre et le Chou</title>
+    <style>
+        :root {
+            --river-blue: #6b93d6;
+            --bank-green: #89c147;
+            --button-color: #4a5568;
+            --button-hover: #2d3748;
+            --font-family: 'Georgia', serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f0f4f8;
+            color: #2d3748;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 1rem 0;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            margin: 0;
+        }
+
+        .game-world {
+            position: relative;
+            width: 100%;
+            height: 50vh;
+            min-height: 400px;
+            background: linear-gradient(to top, var(--river-blue) 60%, #a2c2f0 100%);
+            overflow: hidden;
+            border-radius: 1rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .bank {
+            position: absolute;
+            bottom: 0;
+            width: 30%;
+            height: 65%;
+            background-color: var(--bank-green);
+            background-image: url('https://www.transparenttextures.com/patterns/grass.png');
+            border-top: 5px solid #5a8c2a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        #bank-left {
+            left: 0;
+            border-top-right-radius: 50% 100%;
+        }
+
+        #bank-right {
+            right: 0;
+            border-top-left-radius: 50% 100%;
+        }
+
+        .character {
+            width: clamp(60px, 10vw, 100px);
+            height: auto;
+            cursor: pointer;
+            transition: transform 0.3s ease, filter 0.3s ease;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+        }
+
+        .character:hover {
+            transform: scale(1.1);
+            filter: drop-shadow(0 6px 8px rgba(0,0,0,0.4));
+        }
+
+        .character.disabled {
+            cursor: not-allowed;
+            filter: grayscale(80%) drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+        }
+
+        #boat {
+            position: absolute;
+            width: clamp(180px, 20vw, 220px);
+            height: 100px;
+            bottom: 25%;
+            transform: translateX(-50%);
+            transition: left 2.5s cubic-bezier(0.45, 0, 0.55, 1);
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5));
+        }
+        
+        /* --- Styles pour le bateau et le conducteur en CSS --- */
+        .boat-shape {
+            width: 100%;
+            height: 60px;
+            background-color: #8B4513; /* Marron pour la coque */
+            border: 4px solid #5a3a1a;
+            border-bottom-left-radius: 60px;
+            border-bottom-right-radius: 60px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            position: absolute;
+            bottom: 0;
+            box-sizing: border-box;
+        }
+
+        .farmer {
+            position: absolute;
+            width: 35px;
+            height: 70px;
+            bottom: 50px;
+            left: 25px;
+            z-index: 10;
+        }
+
+        .farmer-body {
+            width: 100%;
+            height: 40px;
+            background-color: #4a90e2; /* Chemise bleue */
+            border-radius: 5px;
+            position: absolute;
+            bottom: 0;
+        }
+
+        .farmer-head {
+            width: 28px;
+            height: 28px;
+            background-color: #ffdbac; /* Couleur peau */
+            border-radius: 50%;
+            position: absolute;
+            top: 0;
+            left: 3.5px;
+        }
+        
+        #boat-content {
+            position: absolute;
+            width: 50%;
+            height: 100%;
+            right: 10px;
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .controls {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .button {
+            font-family: var(--font-family);
+            font-size: 1.2rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background-color: var(--button-color);
+            color: white;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            margin: 0.5rem;
+        }
+
+        .button:hover {
+            background-color: var(--button-hover);
+            transform: translateY(-2px);
+        }
+
+        .button:disabled {
+            background-color: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #message-box {
+            margin-top: 1rem;
+            height: 2.5rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+            transition: color 0.5s;
+        }
+
+        .win-message { color: #38a169; }
+        .loss-message { color: #e53e3e; }
+
+        @keyframes shake {
+            0%, 100% { transform: translate(0, 0) rotate(0); }
+            20% { transform: translate(-5px, 5px) rotate(-5deg); }
+            40% { transform: translate(5px, -5px) rotate(5deg); }
+            60% { transform: translate(-5px, 5px) rotate(-5deg); }
+            80% { transform: translate(5px, -5px) rotate(5deg); }
+        }
+        .eaten {
+            animation: shake 0.7s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <header>
+            <h1>L'Énigme de la Rivière</h1>
+            <p>Cliquez sur un personnage pour le déplacer, puis traversez la rivière !</p>
+        </header>
+
+        <div class="game-world">
+            <div id="bank-left" class="bank"></div>
+            
+            <div id="boat">
+                <div class="boat-shape"></div>
+                <div class="farmer">
+                    <div class="farmer-head"></div>
+                    <div class="farmer-body"></div>
+                </div>
+                <div id="boat-content"></div>
+            </div>
+
+            <div id="bank-right" class="bank"></div>
+        </div>
+
+        <div class="controls">
+            <button id="cross-button" class="button">Traverser</button>
+            <button id="reset-button" class="button" style="background-color: #c53030;">Recommencer</button>
+            <div id="message-box"></div>
+        </div>
+        
+        <footer style="text-align:center; margin-top: 2rem; color: #718096;">Créé par Chrice</footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const bankLeft = document.getElementById('bank-left');
+            const bankRight = document.getElementById('bank-right');
+            const boatContent = document.getElementById('boat-content');
+            const boatElement = document.getElementById('boat');
+            const crossButton = document.getElementById('cross-button');
+            const resetButton = document.getElementById('reset-button');
+            const messageBox = document.getElementById('message-box');
+
+            let state = {};
+
+            const characterData = {
+                wolf: { name: 'Loup', src: 'img/wolf.png' },
+                goat: { name: 'Chèvre', src: 'img/goat.png' },
+                cabbage: { name: 'Chou', src: 'img/cabbage.png' }
+            };
+
+            function initializeGame() {
+                state = {
+                    characters: { wolf: 'left', goat: 'left', cabbage: 'left' },
+                    boat: 'left',
+                    isMoving: false,
+                    isGameOver: false
+                };
+                
+                messageBox.textContent = '';
+                messageBox.className = '';
+                crossButton.disabled = false;
+
+                bankLeft.innerHTML = '';
+                bankRight.innerHTML = '';
+                boatContent.innerHTML = '';
+
+                Object.keys(characterData).forEach(id => {
+                    const charInfo = characterData[id];
+                    const charElement = document.createElement('img');
+                    charElement.id = id;
+                    charElement.src = charInfo.src;
+                    charElement.alt = charInfo.name;
+                    charElement.className = 'character';
+                    charElement.addEventListener('click', onCharacterClick);
+                    charElement.onerror = function() {
+                        this.onerror=null;
+                        this.src=`https://placehold.co/100x100/555/fff?text=${encodeURIComponent(charInfo.name)}`;
+                    };
+                    bankLeft.appendChild(charElement);
+                });
+
+                updateScene();
+            }
+
+            function updateScene() {
+                boatElement.style.left = state.boat === 'left' ? '30%' : '70%';
+                
+                document.querySelectorAll('.character').forEach(char => {
+                    const id = char.id;
+                    const location = state.characters[id];
+                    
+                    if (location === 'boat') {
+                        if (char.parentElement !== boatContent) boatContent.appendChild(char);
+                    } else if (location === 'left') {
+                        if (char.parentElement !== bankLeft) bankLeft.appendChild(char);
+                    } else {
+                        if (char.parentElement !== bankRight) bankRight.appendChild(char);
+                    }
+
+                    if (location !== state.boat && location !== 'boat') {
+                        char.classList.add('disabled');
+                    } else {
+                        char.classList.remove('disabled');
+                    }
+                });
+            }
+
+            function onCharacterClick(event) {
+                if (state.isMoving || state.isGameOver) return;
+                const charId = event.target.id;
+                const currentLocation = state.characters[charId];
+                if (currentLocation === state.boat) {
+                    if (boatContent.children.length === 0) {
+                        state.characters[charId] = 'boat';
+                    }
+                } else if (currentLocation === 'boat') {
+                    state.characters[charId] = state.boat;
+                }
+                updateScene();
+            }
+
+            function crossRiver() {
+                if (state.isMoving || state.isGameOver) return;
+                state.isMoving = true;
+                crossButton.disabled = true;
+                state.boat = (state.boat === 'left') ? 'right' : 'left';
+                boatElement.style.left = state.boat === 'left' ? '30%' : '70%';
+                setTimeout(() => {
+                    state.isMoving = false;
+                    crossButton.disabled = state.isGameOver;
+                    checkGameStatus();
+                    updateScene();
+                }, 2500);
+            }
+
+            function checkGameStatus() {
+                const getItemsOnBank = (bank) => Object.keys(state.characters).filter(id => state.characters[id] === bank);
+                const itemsOnLeft = getItemsOnBank('left');
+                const itemsOnRight = getItemsOnBank('right');
+                let lossCondition = false;
+                let eatenPair = [];
+                const checkBank = (items) => {
+                    const hasWolf = items.includes('wolf');
+                    const hasGoat = items.includes('goat');
+                    const hasCabbage = items.includes('cabbage');
+                    if (hasWolf && hasGoat) {
+                        eatenPair = ['wolf', 'goat'];
+                        return true;
+                    }
+                    if (hasGoat && hasCabbage) {
+                        eatenPair = ['goat', 'cabbage'];
+                        return true;
+                    }
+                    return false;
+                };
+                if (state.boat === 'right' && checkBank(itemsOnLeft)) {
+                    lossCondition = true;
+                } else if (state.boat === 'left' && checkBank(itemsOnRight)) {
+                    lossCondition = true;
+                }
+                if (lossCondition) {
+                    endGame(false, eatenPair);
+                } else if (itemsOnRight.length === 3) {
+                    endGame(true);
+                }
+            }
+
+            function endGame(isWin, eatenPair = []) {
+                state.isGameOver = true;
+                crossButton.disabled = true;
+                if (isWin) {
+                    messageBox.textContent = "Bravo, vous avez réussi !";
+                    messageBox.className = 'win-message';
+                } else {
+                    messageBox.textContent = "Oh non, c'est perdu !";
+                    messageBox.className = 'loss-message';
+                    eatenPair.forEach(id => {
+                        document.getElementById(id)?.classList.add('eaten');
+                    });
+                }
+            }
+            crossButton.addEventListener('click', crossRiver);
+            resetButton.addEventListener('click', initializeGame);
+            initializeGame();
+        });
+    </script>
+</body>
+</html>
