@@ -239,7 +239,7 @@
             const gameDescription = document.getElementById('game-description');
             const moveCounter = document.getElementById('move-counter');
 
-            const MOVE_LIMIT = 10;
+            const MOVE_LIMIT = 7; // Limite de traversées
             let state = {};
 
             const characterData = {
@@ -327,17 +327,33 @@
                 state.moves++;
                 state.boat = (state.boat === 'left') ? 'right' : 'left';
                 
+                // Met à jour la position du bateau et le compteur visuellement
                 updateScene();
 
                 setTimeout(() => {
+                    // Le passager descend automatiquement
+                    const passenger = boatContent.children[0];
+                    if (passenger) {
+                        state.characters[passenger.id] = state.boat;
+                    }
+
                     state.isMoving = false;
-                    crossButton.disabled = state.isGameOver;
+                    
                     checkGameStatus();
-                    updateScene();
+                    
+                    // Met à jour la scène finale après la vérification
+                    updateScene(); 
+                    
+                    if (!state.isGameOver) {
+                        crossButton.disabled = false;
+                    }
                 }, 2500);
             }
 
             function checkGameStatus() {
+                // Si le jeu est déjà terminé, on ne vérifie plus rien
+                if (state.isGameOver) return;
+
                 const getItemsOnBank = (bank) => Object.keys(state.characters).filter(id => state.characters[id] === bank);
                 const itemsOnLeft = getItemsOnBank('left');
                 const itemsOnRight = getItemsOnBank('right');
@@ -368,12 +384,12 @@
                     lossCondition = true;
                 }
 
-                if (lossCondition) {
-                    endGame(false, eatenPair, lossReason);
-                } else if (itemsOnRight.length === 3) {
+                if (itemsOnRight.length === 3) {
                     endGame(true);
+                } else if (lossCondition) {
+                    endGame(false, eatenPair, lossReason);
                 } else if (state.moves >= MOVE_LIMIT) {
-                    endGame(false, [], "Le temps presse et la nuit tombe... Vous n'avez pas réussi à résoudre l'énigme à temps.");
+                    endGame(false, [], "Le temps presse et la nuit tombe... Vous n'avez pas réussi à résoudre l'énigme en 7 traversées.");
                 }
             }
 
